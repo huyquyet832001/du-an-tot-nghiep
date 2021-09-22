@@ -8,7 +8,7 @@ use App\Traits\StorageImageTrait;
 use Illuminate\Http\Request;
 use App\Traits\DeleteModelTrait;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -51,17 +51,27 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $dataInssert =   $this->user->fill($request->all());
-        $dataInssert->password = bcrypt($request->password);
-        $dataImageUser = $this->storageTraitUpload($request, 'image', 'users');
-        if (!empty($dataImageUser)) {
-            $dataInssert['image'] =  $dataImageUser['file_path'];
+        try {
+            DB::beginTransaction();
+            $dataImageUser = $this->storageTraitUpload($request, 'image', 'users');
+            $dataInssert = $this->user->create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'password' => bcrypt($request->password),
+                'image' =>  $dataImageUser['file_path'],
+            ]);
+            $dataInssert->roles()->attach($request->role_id);
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'data' => $dataInssert,
+            ], status: 201);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            Log::error("Message :" . $exception->getMessage() . '---Line:' . $exception->getLine());
         }
-        $dataInssert =  $this->user->save();
-        return response()->json([
-            'code' => 201,
-            'data' => $dataInssert,
-        ], status: 201);
     }
 
     /**
@@ -74,9 +84,9 @@ class UserController extends Controller
     {
         $user =  $this->user->find($id);
         return response()->json([
-            'code' => 201,
+            'code' => 200,
             'data' => $user,
-        ], status: 201);
+        ], status: 200);
     }
 
     /**
@@ -99,22 +109,28 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $dataUpdate = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'password' => bcrypt($request->password),
-        ];
-        $dataImageUser = $this->storageTraitUpload($request, 'image', 'slider');
-        if (!empty($dataImageUser)) {
-            $dataUpdate['image'] = $dataImageUser['file_path'];
+        try {
+            DB::beginTransaction();
+            $dataImageUser = $this->storageTraitUpload($request, 'image', 'users');
+            $dataUpdate = $this->user->find($id)->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'password' => bcrypt($request->password),
+                'image' =>  $dataImageUser['file_path'],
+            ]);
+            $dataUpdate = $this->user->find($id);
+            $dataUpdate->roles()->sync($request->role_id);
+            DB::commit();
+            return response()->json([
+                'code' => 201,
+                'data' => $dataUpdate,
+            ], status: 201);
+        } catch (\Exception $exception) {
+            DB::rollBack();
+            Log::error("Message :" . $exception->getMessage() . '---Line:' . $exception->getLine());
         }
-        $UserUpdate =  $this->user->find($id)->update($dataUpdate);
-        return response()->json([
-            'code' => 201,
-            'data' => $UserUpdate,
-        ], status: 201);
     }
 
     /**
