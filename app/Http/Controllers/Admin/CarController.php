@@ -51,7 +51,7 @@ class CarController extends Controller
                 'car_phone' => $request->car_phone,
 
             ];
-            $dataUpload = $this->storageTraitUpload($request, 'image', 'cart');
+            $dataUpload = $this->storageTraitUpload($request, 'image', 'car');
             if (!empty($dataUpload)) {
                 $dataCartCreate['image'] = $dataUpload['file_path'];
             }
@@ -59,7 +59,7 @@ class CarController extends Controller
             //insert data car_image
             if ($request->hasFile('image_path')) {
                 foreach ($request->image_path as $fileItem) {
-                    $dataCartImageDetail = $this->storageTraitUploadMutiple($fileItem, 'cart');
+                    $dataCartImageDetail = $this->storageTraitUploadMutiple($fileItem, 'car');
                     $image =   CarImage::create([
                         'car_id' => $car->id,
                         'image_path' => $dataCartImageDetail['file_path'],

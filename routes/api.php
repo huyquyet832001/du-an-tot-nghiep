@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CarController;
+use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\LoginController;
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\RoleController;
@@ -53,5 +54,12 @@ Route::prefix('admin')->group(function () {
         Route::post('store', [PolicyController::class, 'store']);
         Route::post('update/{id}', [PolicyController::class, 'update']);
         Route::delete('delete/{id}', [PolicyController::class, 'destroy']);
+    });
+    Route::prefix('locations')->group(function () {
+        Route::get('index', [LocationController::class, 'index']);
+        Route::get('show/{id}', [LocationController::class, 'show']);
+        Route::post('store', [LocationController::class, 'store']);
+        Route::post('update/{id}', [LocationController::class, 'update']);
+        Route::delete('delete/{id}', [LocationController::class, 'destroy']);
     });
 });
